@@ -28,10 +28,7 @@ function updateCounts() {
   document.querySelector("#role-count").textContent = `${roleCount}개`;
   document.querySelector("#balance-members").textContent = `${memberCount}명`;
   document.querySelector("#balance-roles").textContent = `${roleCount}개`;
-  const balanced = memberCount === roleCount;
-  const status = document.querySelector("#balance-status");
-  status.textContent = balanced ? "준비 완료" : "수를 맞춰주세요";
-  status.classList.toggle("ready", balanced);
+  document.querySelector("#balance-status").textContent = "각 역할은 한 번씩 배정돼요";
 }
 
 function makeInputRow(kind, value, index) {
@@ -155,12 +152,14 @@ function shuffle(values) {
 function drawRoles() {
   const cleanMembers = nonEmpty(members);
   const cleanRoles = nonEmpty(roles);
-  if (cleanMembers.length < 2) return showNotice("팀원 이름을 2명 이상 입력해 주세요.");
+  if (cleanMembers.length < 1) return showNotice("팀원 이름을 한 명 이상 입력해 주세요.");
+  if (cleanRoles.length < 1) return showNotice("역할을 한 개 이상 입력해 주세요.");
   if (new Set(cleanMembers.map(normalize)).size !== cleanMembers.length) return showNotice("팀원 이름이 겹쳐요. 서로 다른 이름을 입력해 주세요.");
-  if (cleanRoles.length !== cleanMembers.length) return showNotice(`팀원은 ${cleanMembers.length}명, 역할은 ${cleanRoles.length}개예요. 같은 수로 맞춰 주세요.`);
   if (new Set(cleanRoles.map(normalize)).size !== cleanRoles.length) return showNotice("같은 역할이 두 번 들어 있어요. 중복을 정리해 주세요.");
-  const shuffled = shuffle(cleanRoles);
-  currentAssignments = cleanMembers.map((person, index) => ({ person, role: shuffled[index] }));
+  const recipients = shuffle(cleanMembers);
+  const rolesByPerson = new Map(cleanMembers.map((person) => [person, []]));
+  shuffle(cleanRoles).forEach((role, index) => rolesByPerson.get(recipients[index % recipients.length]).push(role));
+  currentAssignments = cleanMembers.map((person) => ({ person, roles: rolesByPerson.get(person) }));
   showNotice();
   renderResults();
 }
@@ -172,19 +171,24 @@ function renderResults() {
   heading.innerHTML = '<div><span class="section-kicker">02 — IT’S YOUR DESTINY</span><h2>두근두근, 결과 공개!</h2></div><span class="result-crown" aria-hidden="true">♕</span>';
   const list = document.createElement("div");
   list.className = "result-list";
-  currentAssignments.forEach(({ person, role }, index) => {
+  currentAssignments.forEach(({ person, roles }, index) => {
     const row = document.createElement("div");
     row.className = "result-row";
     const number = document.createElement("span"); number.className = "result-number"; number.textContent = String(index + 1).padStart(2, "0");
     const name = document.createElement("strong"); name.textContent = person;
     const arrow = document.createElement("span"); arrow.className = "result-arrow"; arrow.textContent = "→";
-    const roleLabel = document.createElement("span"); roleLabel.className = "result-role"; roleLabel.textContent = role;
-    row.append(number, name, arrow, roleLabel); list.append(row);
+    const roleLabels = document.createElement("div"); roleLabels.className = "result-role-list";
+    if (roles.length === 0) {
+      const empty = document.createElement("span"); empty.className = "result-role-empty"; empty.textContent = "이번엔 맡은 역할이 없어요"; roleLabels.append(empty);
+    } else {
+      roles.forEach((role) => { const label = document.createElement("span"); label.className = "result-role"; label.textContent = role; roleLabels.append(label); });
+    }
+    row.append(number, name, arrow, roleLabels); list.append(row);
   });
   const actions = document.createElement("div"); actions.className = "result-actions";
   const copy = document.createElement("button"); copy.className = "copy-button"; copy.type = "button"; copy.textContent = "▢ 결과 복사";
   copy.addEventListener("click", async () => {
-    const text = currentAssignments.map(({ person, role }) => `${person} — ${role}`).join("\n");
+    const text = currentAssignments.map(({ person, roles }) => `${person} — ${roles.length ? roles.join(", ") : "이번엔 맡은 역할 없음"}`).join("\n");
     try { await navigator.clipboard.writeText(text); showNotice("결과를 복사했어요!"); }
     catch { showNotice("복사할 수 없어요. 브라우저 권한을 확인해 주세요."); }
   });
