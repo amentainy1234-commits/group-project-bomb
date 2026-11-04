@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fff8fc" />
+    <meta name="description" content="팀원과 역할을 입력하고 공평하게 랜덤 배정해 보세요. 로그인 없이 바로 사용할 수 있어요." />
+    <title>조별과제 폭탄돌리기 | 운명의 역할 뽑기</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar"><a class="brand" href="#top" aria-label="홈으로"><span class="brand-mark">♕</span><span>PRINCESS PICK</span></a><span class="top-tag">NO LOGIN · JUST MAGIC</span></header>
+      <section class="hero" id="top">
+        <div class="hero-copy"><span class="eyebrow"><span>✦</span> YOUR TEAM, YOUR DESTINY</span><h1>조별과제<br /><span>폭탄돌리기</span><i>♡</i></h1><p>팀원과 역할을 적고 버튼을 누르면<br class="desktop-break" /> 오늘의 운명이 정해져요.</p><div class="hero-note"><span>✧</span> 공평하게, 랜덤으로, 한 번에!</div></div>
+        <div class="hero-art" aria-hidden="true"><span class="halo"></span><span class="art-star star-one">✦</span><span class="art-star star-two">✧</span><span class="crown">♕</span><span class="heart">♥</span><span class="art-caption">A LITTLE<br />PRINCESS MAGIC</span></div>
+      </section>
+
+      <section class="workspace" aria-label="역할 랜덤 배정">
+        <div class="section-heading"><div><span class="section-kicker">01 — GET YOUR TEAM READY</span><h2>운명의 주인공을<br class="mobile-break" /> 알려주세요</h2></div><span class="step-count">01 <b>/</b> 02</span></div>
+        <div class="entry-grid">
+          <section class="input-card" aria-labelledby="members-title"><div class="card-title"><span class="icon-circle member-icon">♡</span><div><h3 id="members-title">팀원</h3><p>누가 함께하나요?</p></div><span class="count-pill" id="member-count">0명</span></div><div class="rows" id="members-list"></div><button class="add-line" id="add-member"><span>＋</span> 팀원 추가하기</button></section>
+          <section class="input-card role-card" aria-labelledby="roles-title"><div class="card-title"><span class="icon-circle role-icon">♛</span><div><h3 id="roles-title">맡을 역할</h3><p>각자 하나씩 맡을 일이에요</p></div><span class="count-pill" id="role-count">0개</span></div><div class="rows" id="roles-list"></div><div class="role-actions"><button class="add-line" id="add-role"><span>＋</span> 역할 직접 추가</button><button class="suggestion-trigger" id="suggestion-toggle" aria-expanded="false" aria-controls="suggestion-box"><span>✧</span> 추천 역할 <b>＋</b></button></div><div class="suggestion-box" id="suggestion-box" hidden><p>필요한 역할을 골라 담아보세요</p><div class="chips" id="suggestion-chips"></div><div class="suggestion-footer"><span id="selected-count">0개 선택</span><button id="add-selected" disabled>선택한 역할 추가 <span>→</span></button></div></div></section>
+        </div>
+        <div class="balance-row"><span class="balance-icon">✦</span><span>팀원 <b id="balance-members">0명</b></span><span class="balance-line"></span><span>역할 <b id="balance-roles">0개</b></span><span class="balance-status" id="balance-status">수를 맞춰주세요</span></div>
+        <p class="notice" id="notice" role="status" aria-live="polite" hidden></p>
+        <button class="draw-button" id="draw-button"><span>운명의 역할 뽑기</span><b>♕</b></button>
+        <section class="result-panel" id="result-panel" aria-live="polite" hidden></section>
+        <button class="reset-button" id="reset-button">처음부터 다시 하기 <span>↗</span></button>
+      </section>
+      <footer class="footer"><span>MADE WITH <b>♥</b> FOR YOUR TEAM</span><span>FAIR PLAY, PINK MAGIC <i>✦</i></span></footer>
+    </main>
+  </body>
+</html>
+
