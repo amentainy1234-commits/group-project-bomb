@@ -62,11 +62,6 @@ function makeInputRow(kind, value, index) {
     updateCounts();
     if (kind === "role") renderSuggestions();
   });
-  input.addEventListener("blur", () => {
-    if (kind !== "role" || !input.value.trim()) return;
-    const duplicate = roles.some((item, itemIndex) => itemIndex !== index && normalize(item) === normalize(input.value));
-    showNotice(duplicate ? `‘${input.value.trim()}’ 역할은 이미 있어요.` : "");
-  });
   const remove = document.createElement("button");
   remove.className = "remove-button";
   remove.type = "button";
@@ -94,8 +89,7 @@ function renderInputs() {
 }
 
 function renderSuggestions() {
-  const existing = new Set(nonEmpty(roles).map(normalize));
-  const available = recommendedRoles.filter((role) => !existing.has(normalize(role)));
+  const available = recommendedRoles;
   const chips = document.querySelector("#suggestion-chips");
   chips.replaceChildren();
   if (!available.length) {
@@ -141,9 +135,7 @@ function addEmptyRow(kind) {
 
 function addSelectedRoles() {
   cancelPendingReveal();
-  const existing = new Set(nonEmpty(roles).map(normalize));
-  const fresh = [...selectedSuggestions].filter((role) => !existing.has(normalize(role)));
-  roles.push(...fresh);
+  roles.push(...selectedSuggestions);
   selectedSuggestions.clear();
   currentAssignments = null;
   drawButton.hidden = false;
@@ -168,7 +160,6 @@ function drawRoles() {
   if (cleanMembers.length < 1) return showNotice("팀원 이름을 한 명 이상 입력해 주세요.");
   if (cleanRoles.length < 1) return showNotice("역할을 한 개 이상 입력해 주세요.");
   if (new Set(cleanMembers.map(normalize)).size !== cleanMembers.length) return showNotice("팀원 이름이 겹쳐요. 서로 다른 이름을 입력해 주세요.");
-  if (new Set(cleanRoles.map(normalize)).size !== cleanRoles.length) return showNotice("같은 역할이 두 번 들어 있어요. 중복을 정리해 주세요.");
   const recipients = shuffle(cleanMembers);
   const rolesByPerson = new Map(cleanMembers.map((person) => [person, []]));
   shuffle(cleanRoles).forEach((role, index) => rolesByPerson.get(recipients[index % recipients.length]).push(role));
