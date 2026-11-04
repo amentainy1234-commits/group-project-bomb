@@ -1,0 +1,4 @@
+.result-role-list{display:flex;flex:1;flex-wrap:wrap;gap:5px}
+.result-role-empty{align-self:center;border-radius:20px;background:#f8f5f7;color:#a99ba4;padding:6px 10px;font-size:10px}
+@media(max-width:760px){.balance-status{max-width:48%;text-align:right;line-height:1.45}.result-row{flex-wrap:wrap}.result-role-list{flex-basis:100%;padding-left:34px}}
+
