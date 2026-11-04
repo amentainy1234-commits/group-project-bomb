@@ -5,6 +5,7 @@ let members = ["", ""];
 let roles = ["", ""];
 let selectedSuggestions = new Set();
 let currentAssignments = null;
+let revealTimer = null;
 
 const memberList = document.querySelector("#members-list");
 const roleList = document.querySelector("#roles-list");
@@ -19,6 +20,13 @@ const nonEmpty = (values) => values.map((value) => value.trim()).filter(Boolean)
 function showNotice(message = "") {
   notice.textContent = message ? `♡ ${message}` : "";
   notice.hidden = !message;
+}
+
+function cancelPendingReveal() {
+  if (revealTimer !== null) window.clearTimeout(revealTimer);
+  revealTimer = null;
+  resultPanel.classList.remove("is-suspense", "is-revealing");
+  resultPanel.removeAttribute("aria-busy");
 }
 
 function updateCounts() {
@@ -45,6 +53,7 @@ function makeInputRow(kind, value, index) {
   input.placeholder = kind === "member" ? `팀원 이름 ${index + 1}` : "예: 자료조사";
   input.value = value;
   input.addEventListener("input", () => {
+    cancelPendingReveal();
     (kind === "member" ? members : roles)[index] = input.value;
     currentAssignments = null;
     drawButton.hidden = false;
@@ -67,6 +76,7 @@ function makeInputRow(kind, value, index) {
   remove.addEventListener("click", () => {
     const values = kind === "member" ? members : roles;
     if (values.length <= 1) return;
+    cancelPendingReveal();
     values.splice(index, 1);
     currentAssignments = null;
     drawButton.hidden = false;
@@ -118,6 +128,7 @@ function renderAll() {
 }
 
 function addEmptyRow(kind) {
+  cancelPendingReveal();
   if (kind === "member") members.push("");
   else roles.push("");
   currentAssignments = null;
@@ -129,6 +140,7 @@ function addEmptyRow(kind) {
 }
 
 function addSelectedRoles() {
+  cancelPendingReveal();
   const existing = new Set(nonEmpty(roles).map(normalize));
   const fresh = [...selectedSuggestions].filter((role) => !existing.has(normalize(role)));
   roles.push(...fresh);
@@ -150,6 +162,7 @@ function shuffle(values) {
 }
 
 function drawRoles() {
+  cancelPendingReveal();
   const cleanMembers = nonEmpty(members);
   const cleanRoles = nonEmpty(roles);
   if (cleanMembers.length < 1) return showNotice("팀원 이름을 한 명 이상 입력해 주세요.");
@@ -161,11 +174,38 @@ function drawRoles() {
   shuffle(cleanRoles).forEach((role, index) => rolesByPerson.get(recipients[index % recipients.length]).push(role));
   currentAssignments = cleanMembers.map((person) => ({ person, roles: rolesByPerson.get(person) }));
   showNotice();
-  renderResults();
+  showRevealSuspense();
+}
+
+function showRevealSuspense() {
+  drawButton.hidden = true;
+  resultPanel.className = "result-panel is-suspense";
+  resultPanel.setAttribute("aria-busy", "true");
+  resultPanel.innerHTML = '<div class="reveal-stage"><div class="reveal-orbit" aria-hidden="true"><span class="reveal-orbit-star star-a">✦</span><span class="reveal-tiara">♕</span><span class="reveal-orbit-star star-b">✧</span><span class="reveal-orbit-heart">♡</span></div><span class="reveal-kicker">THE MOMENT OF TRUTH</span><h2 class="reveal-title">운명의 역할을<br />고르는 중...</h2><p class="reveal-copy">누가 어떤 역할을 맡게 될까요?</p><div class="reveal-progress" aria-hidden="true"><span></span></div><span class="reveal-footnote">잠시만 기다려 주세요 ✦</span></div>';
+  resultPanel.hidden = false;
+  const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1650;
+  revealTimer = window.setTimeout(() => {
+    revealTimer = null;
+    renderResults();
+  }, delay);
 }
 
 function renderResults() {
   if (!currentAssignments) return;
+  resultPanel.className = "result-panel is-revealing";
+  resultPanel.setAttribute("aria-busy", "false");
+  const confetti = document.createElement("div");
+  confetti.className = "reveal-confetti";
+  confetti.setAttribute("aria-hidden", "true");
+  for (let index = 0; index < 12; index += 1) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.setProperty("--offset", `${(index - 5.5) * 23}px`);
+    piece.style.setProperty("--lift", `${-22 - (index % 4) * 10}px`);
+    piece.style.setProperty("--spin", `${(index % 2 ? 1 : -1) * (120 + index * 18)}deg`);
+    piece.style.setProperty("--delay", `${(index % 5) * 35}ms`);
+    confetti.append(piece);
+  }
   const heading = document.createElement("div");
   heading.className = "result-heading";
   heading.innerHTML = '<div><span class="section-kicker">02 — IT’S YOUR DESTINY</span><h2>두근두근, 결과 공개!</h2></div><span class="result-crown" aria-hidden="true">♕</span>';
@@ -174,6 +214,8 @@ function renderResults() {
   currentAssignments.forEach(({ person, roles }, index) => {
     const row = document.createElement("div");
     row.className = "result-row";
+    row.style.setProperty("--row-index", index);
+    row.style.setProperty("--row-delay", `${150 + index * 140}ms`);
     const number = document.createElement("span"); number.className = "result-number"; number.textContent = String(index + 1).padStart(2, "0");
     const name = document.createElement("strong"); name.textContent = person;
     const arrow = document.createElement("span"); arrow.className = "result-arrow"; arrow.textContent = "→";
@@ -181,7 +223,7 @@ function renderResults() {
     if (roles.length === 0) {
       const empty = document.createElement("span"); empty.className = "result-role-empty"; empty.textContent = "이번엔 맡은 역할이 없어요"; roleLabels.append(empty);
     } else {
-      roles.forEach((role) => { const label = document.createElement("span"); label.className = "result-role"; label.textContent = role; roleLabels.append(label); });
+      roles.forEach((role, roleIndex) => { const label = document.createElement("span"); label.className = "result-role"; label.style.setProperty("--chip-delay", `${270 + index * 140 + roleIndex * 70}ms`); label.textContent = role; roleLabels.append(label); });
     }
     row.append(number, name, arrow, roleLabels); list.append(row);
   });
@@ -194,12 +236,13 @@ function renderResults() {
   });
   const reshuffle = document.createElement("button"); reshuffle.className = "reshuffle-button"; reshuffle.type = "button"; reshuffle.textContent = "⟳ 다시 섞기"; reshuffle.addEventListener("click", drawRoles);
   actions.append(copy, reshuffle);
-  resultPanel.replaceChildren(heading, list, actions);
+  resultPanel.replaceChildren(confetti, heading, list, actions);
   resultPanel.hidden = false;
   drawButton.hidden = true;
 }
 
 function reset() {
+  cancelPendingReveal();
   members = ["", ""];
   roles = ["", ""];
   selectedSuggestions.clear();
